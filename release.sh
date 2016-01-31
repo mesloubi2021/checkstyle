@@ -32,13 +32,15 @@ EOF
 
 ##############################
 
-$RELEASE=6.15
+RELEASE=6.15
 git checkout checkstyle-$RELEASE
 mvn -Passembly clean package
 
-$FRS_PATH=/home/frs/project/checkstyle/checkstyle/$RELEASE
+FRS_PATH=/home/frs/project/checkstyle/checkstyle/$RELEASE
 ssh romanivanov,checkstyle@shell.sourceforge.net "mkdir -p $FRS_PATH"
 scp target/*.jar romanivanov@frs.sourceforge.net:$FRS_PATH
+scp target/*.tar.gz romanivanov@frs.sourceforge.net:$FRS_PATH
+scp target/*.zip romanivanov@frs.sourceforge.net:$FRS_PATH
 
 git checkout master
 
