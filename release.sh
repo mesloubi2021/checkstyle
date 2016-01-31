@@ -5,7 +5,7 @@ set -e
 
 #############################
 
-ssh -t romanivanov,checkstyle@shell.sourceforge.net create
+echo "exit" | ssh -t romanivanov,checkstyle@shell.sourceforge.net create
 
 # Version bump in pom.xml - https://github.com/checkstyle/checkstyle/commits/master
 mvn -Pgpg release:prepare -B -Darguments="-DskipTests -DskipITs -Dpmd.skip=true -Dfindbugs.skip=true -Dcobertura.skip=true -Dcheckstyle.ant.skip=true -Dcheckstyle.skip=true -Dxml.skip=true"
