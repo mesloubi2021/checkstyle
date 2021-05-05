@@ -153,7 +153,7 @@ public abstract class AbstractHeaderCheck extends AbstractFileSetCheck
                 loadHeader(headerReader);
             }
             catch (final IOException ex) {
-                throw new IllegalArgumentException("unable to load header", ex);
+                throw null;
             }
         }
     }
