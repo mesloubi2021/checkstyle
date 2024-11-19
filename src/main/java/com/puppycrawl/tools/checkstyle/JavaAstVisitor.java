@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
@@ -564,7 +563,9 @@ public final class JavaAstVisitor extends JavaLanguageParserBaseVisitor<DetailAs
             JavaLanguageParser.ClassOrInterfaceTypeContext ctx) {
         final DetailAstPair currentAST = new DetailAstPair();
         DetailAstPair.addAstChild(currentAST, visit(ctx.id()));
-        DetailAstPair.addAstChild(currentAST, visit(ctx.typeArguments()));
+        if (ctx.typeArguments() != null) {
+            DetailAstPair.addAstChild(currentAST, visit(ctx.typeArguments()));
+        }
 
         // This is how we build the annotations/ qualified name/ type parameters tree
         for (ParserRuleContext extendedContext : ctx.extended) {
@@ -870,7 +871,9 @@ public final class JavaAstVisitor extends JavaLanguageParserBaseVisitor<DetailAs
         else {
             root = create(TokenTypes.CTOR_CALL, (Token) ctx.LITERAL_THIS().getPayload());
         }
-        root.addChild(visit(ctx.typeArguments()));
+        if (ctx.typeArguments() != null) {
+            root.addChild(visit(ctx.typeArguments()));
+        }
         root.addChild(visit(ctx.arguments()));
         root.addChild(create(ctx.SEMI()));
         return root;
@@ -1262,12 +1265,16 @@ public final class JavaAstVisitor extends JavaLanguageParserBaseVisitor<DetailAs
         dummyRoot.addChild(create(ctx.SEMI(0)));
 
         final DetailAstImpl forCondParent = createImaginary(TokenTypes.FOR_CONDITION);
-        forCondParent.addChild(visit(ctx.forCond));
+        if (ctx.forCond != null) {
+            forCondParent.addChild(visit(ctx.forCond));
+        }
         dummyRoot.addChild(forCondParent);
         dummyRoot.addChild(create(ctx.SEMI(1)));
 
         final DetailAstImpl forItParent = createImaginary(TokenTypes.FOR_ITERATOR);
-        forItParent.addChild(visit(ctx.forUpdate));
+        if (ctx.forUpdate != null) {
+            forItParent.addChild(visit(ctx.forUpdate));
+        }
         dummyRoot.addChild(forItParent);
 
         dummyRoot.addChild(create(ctx.RPAREN()));
@@ -1337,12 +1344,13 @@ public final class JavaAstVisitor extends JavaLanguageParserBaseVisitor<DetailAs
         final DetailAstImpl bop = create(ctx.bop);
         bop.addChild(visit(ctx.expr()));
         bop.addChild(create(ctx.LITERAL_SUPER()));
-        DetailAstImpl superSuffixParent = visit(ctx.superSuffix());
+        final DetailAstImpl superSuffixParent;
 
-        if (superSuffixParent == null) {
+        if (ctx.superSuffix() == null) {
             superSuffixParent = bop;
         }
         else {
+            superSuffixParent = visit(ctx.superSuffix());
             DetailAstImpl firstChild = superSuffixParent;
             while (firstChild.getFirstChild() != null) {
                 firstChild = firstChild.getFirstChild();
@@ -1467,8 +1475,13 @@ public final class JavaAstVisitor extends JavaLanguageParserBaseVisitor<DetailAs
         DetailAstPair.makeAstRoot(currentAst, lparen);
 
         // We always add an 'ELIST' node
-        final DetailAstImpl expressionList = Optional.ofNullable(visit(ctx.expressionList()))
-                .orElseGet(() -> createImaginary(TokenTypes.ELIST));
+        final DetailAstImpl expressionList;
+        if (ctx.expressionList() == null) {
+            expressionList = createImaginary(TokenTypes.ELIST);
+        }
+        else {
+            expressionList = visit(ctx.expressionList());
+        }
 
         DetailAstPair.addAstChild(currentAst, expressionList);
         DetailAstPair.addAstChild(currentAst, create(ctx.RPAREN()));
@@ -1481,7 +1494,9 @@ public final class JavaAstVisitor extends JavaLanguageParserBaseVisitor<DetailAs
         final DetailAstImpl dot = create(ctx.bop);
         dot.addChild(visit(ctx.expr()));
         final DetailAstImpl literalNew = create(ctx.LITERAL_NEW());
-        literalNew.addChild(visit(ctx.nonWildcardTypeArguments()));
+        if (ctx.nonWildcardTypeArguments() != null) {
+            literalNew.addChild(visit(ctx.nonWildcardTypeArguments()));
+        }
         literalNew.addChild(visit(ctx.innerCreator()));
         dot.addChild(literalNew);
         return dot;
@@ -1493,8 +1508,13 @@ public final class JavaAstVisitor extends JavaLanguageParserBaseVisitor<DetailAs
                 (Token) ctx.LPAREN().getPayload());
         methodCall.addChild(visit(ctx.id()));
         // We always add an 'ELIST' node
-        final DetailAstImpl expressionList = Optional.ofNullable(visit(ctx.expressionList()))
-                .orElseGet(() -> createImaginary(TokenTypes.ELIST));
+        final DetailAstImpl expressionList;
+        if (ctx.expressionList() == null) {
+            expressionList = createImaginary(TokenTypes.ELIST);
+        }
+        else {
+            expressionList = visit(ctx.expressionList());
+        }
 
         methodCall.addChild(expressionList);
         methodCall.addChild(create((Token) ctx.RPAREN().getPayload()));
@@ -1627,8 +1647,13 @@ public final class JavaAstVisitor extends JavaLanguageParserBaseVisitor<DetailAs
         final DetailAstImpl methodCall = create(TokenTypes.METHOD_CALL,
                 (Token) ctx.LPAREN().getPayload());
         // We always add an 'ELIST' node
-        final DetailAstImpl expressionList = Optional.ofNullable(visit(ctx.expressionList()))
-                .orElseGet(() -> createImaginary(TokenTypes.ELIST));
+        final DetailAstImpl expressionList;
+        if (ctx.expressionList() == null) {
+            expressionList = createImaginary(TokenTypes.ELIST);
+        }
+        else {
+            expressionList = visit(ctx.expressionList());
+        }
 
         final DetailAstImpl dot = create(ctx.DOT());
         dot.addChild(visit(ctx.expr()));
@@ -1661,8 +1686,13 @@ public final class JavaAstVisitor extends JavaLanguageParserBaseVisitor<DetailAs
         final DetailAstImpl lparen = create(ctx.LPAREN());
 
         // We add an 'PARAMETERS' node here whether it exists or not
-        final DetailAstImpl parameters = Optional.ofNullable(visit(ctx.formalParameterList()))
-                .orElseGet(() -> createImaginary(TokenTypes.PARAMETERS));
+        final DetailAstImpl parameters;
+        if (ctx.formalParameterList() == null) {
+            parameters = createImaginary(TokenTypes.PARAMETERS);
+        }
+        else {
+            parameters = visit(ctx.formalParameterList());
+        }
         addLastSibling(lparen, parameters);
         addLastSibling(lparen, create(ctx.RPAREN()));
         return lparen;
@@ -1754,7 +1784,9 @@ public final class JavaAstVisitor extends JavaLanguageParserBaseVisitor<DetailAs
         final DetailAstPair currentAST = new DetailAstPair();
         DetailAstPair.addAstChild(currentAST, visit(ctx.annotations()));
         DetailAstPair.addAstChild(currentAST, visit(ctx.id()));
-        DetailAstPair.addAstChild(currentAST, visit(ctx.typeArgumentsOrDiamond()));
+        if (ctx.typeArgumentsOrDiamond() != null) {
+            DetailAstPair.addAstChild(currentAST, visit(ctx.typeArgumentsOrDiamond()));
+        }
 
         // This is how we build the type arguments/ qualified name tree
         for (ParserRuleContext extendedContext : ctx.extended) {
@@ -1940,8 +1972,13 @@ public final class JavaAstVisitor extends JavaLanguageParserBaseVisitor<DetailAs
             dot.addChild(visit(ctx.id()));
             root.addChild(dot);
 
-            final DetailAstImpl expressionList = Optional.ofNullable(visit(ctx.expressionList()))
-                    .orElseGet(() -> createImaginary(TokenTypes.ELIST));
+            final DetailAstImpl expressionList;
+            if (ctx.expressionList() == null) {
+                expressionList = createImaginary(TokenTypes.ELIST);
+            }
+            else {
+                expressionList = visit(ctx.expressionList());
+            }
             root.addChild(expressionList);
 
             root.addChild(create(ctx.RPAREN()));
@@ -1955,8 +1992,14 @@ public final class JavaAstVisitor extends JavaLanguageParserBaseVisitor<DetailAs
         final DetailAstImpl lparen = create(ctx.LPAREN());
 
         // We always add an 'ELIST' node
-        final DetailAstImpl expressionList = Optional.ofNullable(visit(ctx.expressionList()))
-                .orElseGet(() -> createImaginary(TokenTypes.ELIST));
+        final DetailAstImpl expressionList;
+
+        if (ctx.expressionList() == null) {
+            expressionList = createImaginary(TokenTypes.ELIST);
+        }
+        else {
+            expressionList = visit(ctx.expressionList());
+        }
         addLastSibling(lparen, expressionList);
         addLastSibling(lparen, create(ctx.RPAREN()));
         return lparen;
@@ -2208,10 +2251,7 @@ public final class JavaAstVisitor extends JavaLanguageParserBaseVisitor<DetailAs
 
     @Override
     public DetailAstImpl visit(ParseTree tree) {
-        DetailAstImpl ast = null;
-        if (tree != null) {
-            ast = tree.accept(this);
-        }
+        final DetailAstImpl ast = tree.accept(this);
         return ast;
     }
 
